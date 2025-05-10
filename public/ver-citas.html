@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <link rel="stylesheet" href="css/estilos.css">
+  <meta charset="UTF-8" />
+  <title>Listado de Citas</title>
+</head>
+<body>
+  <h1>Listado de Citas</h1>
+  <a href="./index.html"><button>Regresar</button></a>
+
+  <div style="display: flex; gap: 40px; flex-wrap: wrap;">
+    <!-- Pendientes -->
+    <div style="flex: 1; min-width: 300px;">
+      <h2>Citas pendientes</h2>
+      <button id="orden-fecha-pendientes">Ordenar por fecha ⬇️</button>
+      <input type="text" id="busqueda-pendientes" placeholder="Buscar por mascota o dueño" />
+      <ul id="lista-pendientes"></ul>
+    </div>
+
+    <!-- Completadas -->
+    <div style="flex: 1; min-width: 300px;">
+      <h2>Citas completadas</h2>
+      <button id="orden-fecha-completadas">Ordenar por fecha ⬇️</button>
+      <input type="text" id="busqueda-completadas" placeholder="Buscar por mascota o dueño" />
+      <ul id="lista-completadas"></ul>
+    </div>
+  </div>
+
+  <script>
+    let citasOriginales = [];
+    let ordenPendientesDesc = true;
+    let ordenCompletadasDesc = true;
+
+    async function cargarCitas() {
+      const res = await fetch("/citas");
+      citasOriginales = await res.json();
+      renderCitas();
+    }
+
+    function renderCitas() {
+      const ahora = new Date();
+
+      const filtroPend = document.getElementById("busqueda-pendientes").value.toLowerCase();
+      const filtroComp = document.getElementById("busqueda-completadas").value.toLowerCase();
+
+      const pendientes = citasOriginales.filter(cita => {
+        const fechaHora = new Date(`${cita.fecha}T${cita.hora}`);
+        return fechaHora >= ahora &&
+          (cita.nombreMascota.toLowerCase().includes(filtroPend) || cita.nombreDueno.toLowerCase().includes(filtroPend));
+      });
+
+      const completadas = citasOriginales.filter(cita => {
+        const fechaHora = new Date(`${cita.fecha}T${cita.hora}`);
+        return fechaHora < ahora &&
+          (cita.nombreMascota.toLowerCase().includes(filtroComp) || cita.nombreDueno.toLowerCase().includes(filtroComp));
+      });
+
+      pendientes.sort((a, b) => {
+        const fechaA = new Date(`${a.fecha}T${a.hora}`);
+        const fechaB = new Date(`${b.fecha}T${b.hora}`);
+        return ordenPendientesDesc ? fechaB - fechaA : fechaA - fechaB;
+      });
+
+      completadas.sort((a, b) => {
+        const fechaA = new Date(`${a.fecha}T${a.hora}`);
+        const fechaB = new Date(`${b.fecha}T${b.hora}`);
+        return ordenCompletadasDesc ? fechaB - fechaA : fechaA - fechaB;
+      });
+
+      renderLista(pendientes, "lista-pendientes", true);
+      renderLista(completadas, "lista-completadas", false);
+    }
+
+    function renderLista(lista, idLista, editable) {
+      const ul = document.getElementById(idLista);
+      ul.innerHTML = "";
+
+      lista.forEach(cita => {
+        const item = document.createElement("li");
+        const contenido = document.createElement("div");
+
+        contenido.textContent = `
+Mascota: ${cita.nombreMascota} | Raza: ${cita.raza} | Edad: ${cita.edad} años | Peso: ${cita.peso || 'N/D'} kg
+Propósito: ${cita.proposito} | Fecha: ${cita.fecha} ${cita.hora}
+Dueño: ${cita.nombreDueno} | Cédula: ${cita.cedula}
+Correo: ${cita.correo} | Celular: ${cita.celular}
+        `;
+
+        item.appendChild(contenido);
+
+        if (editable) {
+          const btnEditar = document.createElement("button");
+          btnEditar.textContent = "Editar";
+
+          const btnEliminar = document.createElement("button");
+          btnEliminar.textContent = "Eliminar";
+          btnEliminar.onclick = async () => {
+            await fetch(`/citas/${cita._id}`, { method: "DELETE" });
+            cargarCitas();
+          };
+
+          btnEditar.onclick = () => {
+            const original = { ...cita };
+            contenido.innerHTML = `
+              <input type="text" value="${original.nombreMascota}" />
+              <input type="text" value="${original.raza}" />
+              <input type="number" value="${original.edad}" />
+              <input type="number" step="0.1" value="${original.peso || ''}" />
+              <input type="text" value="${original.proposito}" />
+              <input type="date" value="${original.fecha}" />
+              <input type="time" value="${original.hora}" />
+              <input type="text" value="${original.nombreDueno}" />
+              <input type="text" value="${original.cedula}" />
+              <input type="email" value="${original.correo}" />
+              <input type="tel" value="${original.celular}" />
+            `;
+
+            const btnGuardar = document.createElement("button");
+            btnGuardar.textContent = "Guardar";
+            btnGuardar.onclick = async () => {
+              const inputs = contenido.querySelectorAll("input");
+              const datosActualizados = {
+                nombreMascota: inputs[0].value,
+                raza: inputs[1].value,
+                edad: parseInt(inputs[2].value),
+                peso: parseFloat(inputs[3].value) || null,
+                proposito: inputs[4].value,
+                fecha: inputs[5].value,
+                hora: inputs[6].value,
+                nombreDueno: inputs[7].value,
+                cedula: inputs[8].value,
+                correo: inputs[9].value,
+                celular: inputs[10].value
+              };
+
+              await fetch(`/citas/${cita._id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(datosActualizados)
+              });
+
+              cargarCitas();
+            };
+
+            const btnCancelar = document.createElement("button");
+            btnCancelar.textContent = "Cancelar";
+            btnCancelar.onclick = cargarCitas;
+
+            item.replaceChildren(contenido, btnGuardar, btnCancelar, btnEliminar);
+          };
+
+          item.appendChild(btnEditar);
+          item.appendChild(btnEliminar);
+        }
+
+        ul.appendChild(item);
+      });
+    }
+
+    document.getElementById("orden-fecha-pendientes").addEventListener("click", () => {
+      ordenPendientesDesc = !ordenPendientesDesc;
+      document.getElementById("orden-fecha-pendientes").textContent =
+        `Ordenar por fecha ${ordenPendientesDesc ? "⬇️" : "⬆️"}`;
+      renderCitas();
+    });
+
+    document.getElementById("orden-fecha-completadas").addEventListener("click", () => {
+      ordenCompletadasDesc = !ordenCompletadasDesc;
+      document.getElementById("orden-fecha-completadas").textContent =
+        `Ordenar por fecha ${ordenCompletadasDesc ? "⬇️" : "⬆️"}`;
+      renderCitas();
+    });
+
+    document.getElementById("busqueda-pendientes").addEventListener("input", renderCitas);
+    document.getElementById("busqueda-completadas").addEventListener("input", renderCitas);
+
+    cargarCitas();
+  </script>
+</body>
+</html>
