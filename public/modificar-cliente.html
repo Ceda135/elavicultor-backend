@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Modificar Cliente</title>
+  <link rel="stylesheet" href="css/estilos.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.7)), url('img/fondo-marca-agua.png') no-repeat center center fixed;
+      background-size: 55%;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    form {
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      width: 100%;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 8px;
+      margin-bottom: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Modificar Cliente</h1>
+
+  <form id="form-cliente">
+    <label>Nombre:</label>
+    <input type="text" name="nombre" required>
+
+    <label>Cédula:</label>
+    <input type="text" name="cedula" required>
+
+    <label>Correo:</label>
+    <input type="email" name="correo" required>
+
+    <label>Celular:</label>
+    <input type="tel" name="celular" required>
+
+    <button type="submit">Guardar Cambios</button>
+  </form>
+
+  <script>
+    const clienteId = new URLSearchParams(window.location.search).get("id");
+
+    async function cargarDatos() {
+      const res = await fetch(`/clientes/${clienteId}`);
+      const cliente = await res.json();
+      const form = document.getElementById("form-cliente");
+
+      form.nombre.value = cliente.nombre;
+      form.cedula.value = cliente.cedula;
+      form.correo.value = cliente.correo;
+      form.celular.value = cliente.celular;
+    }
+
+    document.getElementById("form-cliente").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const datos = {
+        nombre: form.nombre.value,
+        cedula: form.cedula.value,
+        correo: form.correo.value,
+        celular: form.celular.value
+      };
+
+      const res = await fetch(`/clientes/${clienteId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(datos)
+      });
+
+      if (res.ok) {
+        alert("✅ Cliente actualizado con éxito");
+        window.location.href = `cliente.html?id=${clienteId}`;
+      } else {
+        alert("❌ Error al actualizar el cliente");
+      }
+    });
+
+    cargarDatos();
+  </script>
+</body>
+</html>

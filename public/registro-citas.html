@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro de Citas</title>
+  <link rel="stylesheet" href="css/estilos.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.7)), url('img/fondo-marca-agua.png') no-repeat center center fixed;
+      background-size: 55%;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 30px;
+      color: #333;
+    }
+
+    .botones-filtro {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .btn-filtro {
+      background-color: #f5f5f5;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 15px 30px;
+      cursor: pointer;
+      font-size: 18px;
+      transition: background-color 0.3s;
+    }
+
+    .btn-filtro:hover {
+      background-color: #ddd;
+    }
+
+    #contenedor-citas {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 30px;
+      margin-top: 30px;
+    }
+
+    .columna {
+      flex: 1;
+      min-width: 300px;
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .cita {
+      background-color: #fafafa;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 10px;
+      margin-bottom: 10px;
+      text-align: left;
+    }
+
+    .btn-volver {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .edad-group {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .edad-group input {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <a href="index.html"><button class="btn-volver">🔙 Volver al inicio</button></a>
+  <h1>📖 Registro de Citas</h1>
+
+  <div class="botones-filtro">
+    <div class="btn-filtro">📅 Próximas Citas</div>
+    <div class="btn-filtro">⏳ Citas Pasadas</div>
+  </div>
+
+  <div id="contenedor-citas">
+    <div class="columna" id="proximas">
+      <h2>📅 Próximas Citas</h2>
+    </div>
+    <div class="columna" id="pasadas">
+      <h2>⏳ Citas Pasadas</h2>
+    </div>
+  </div>
+
+  <script>
+    async function cargarCitas() {
+      const res = await fetch('/clientes');
+      const clientes = await res.json();
+
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+
+      const contProximas = document.getElementById('proximas');
+      const contPasadas = document.getElementById('pasadas');
+
+      clientes.forEach(cliente => {
+        cliente.animales?.forEach(animal => {
+          animal.citas?.forEach(cita => {
+            const fechaCita = new Date(cita.fecha + 'T' + (cita.hora || '00:00'));
+
+            const elemento = document.createElement('div');
+            elemento.className = 'cita';
+            elemento.innerHTML = `
+              <strong>Cliente:</strong> ${cliente.nombre}<br>
+              <strong>Mascota:</strong> ${animal.nombre}<br>
+              <strong>Fecha:</strong> ${cita.fecha}<br>
+              <strong>Hora:</strong> ${cita.hora || 'Sin hora registrada'}
+            `;
+
+            if (fechaCita >= hoy) {
+              contProximas.appendChild(elemento);
+            } else {
+              contPasadas.appendChild(elemento);
+            }
+          });
+        });
+      });
+    }
+
+    cargarCitas();
+  </script>
+</body>
+</html>

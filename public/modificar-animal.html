@@ -2,13 +2,12 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Agregar Animal</title>
+  <title>Modificar Animal</title>
   <link rel="stylesheet" href="css/estilos.css">
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.7)),
-        url('img/fondo-marca-agua.png') no-repeat center center fixed;
+      background: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.7)), url('img/fondo-marca-agua.png') no-repeat center center fixed;
       background-size: 55%;
       margin: 0;
       padding: 20px;
@@ -17,17 +16,11 @@
       align-items: center;
     }
 
-    h1 {
-      color: #333;
-      text-align: center;
-    }
-
     form {
       background-color: rgba(255, 255, 255, 0.95);
       padding: 20px;
       border-radius: 8px;
-      box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-      margin-top: 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
       width: 100%;
       max-width: 400px;
     }
@@ -35,8 +28,7 @@
     input {
       width: 100%;
       padding: 8px;
-      margin-top: 8px;
-      margin-bottom: 16px;
+      margin: 8px 0;
       border: 1px solid #ccc;
       border-radius: 4px;
       font-size: 14px;
@@ -57,8 +49,8 @@
       border: none;
       padding: 10px 15px;
       border-radius: 5px;
-      cursor: pointer;
       font-size: 16px;
+      cursor: pointer;
     }
 
     button:hover {
@@ -69,15 +61,11 @@
       margin-top: 10px;
       color: green;
     }
-
-    #boton-regresar {
-      margin-top: 20px;
-    }
   </style>
 </head>
 <body>
 
-  <h1>Agregar Animal</h1>
+  <h1>Modificar Animal</h1>
 
   <form id="form-animal">
     <label>Tipo:</label>
@@ -99,53 +87,70 @@
     <label>Peso (kg):</label>
     <input type="number" name="peso" step="0.01">
 
-    <button type="submit">Agregar</button>
+    <button type="submit">Guardar Cambios</button>
   </form>
 
   <p id="mensaje"></p>
-
-  <div id="boton-regresar">
-    <button onclick="window.history.back()">Regresar</button>
-  </div>
+  <br>
+  <button onclick="window.history.back()">Regresar</button>
 
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const clienteId = urlParams.get('id');
+    const params = new URLSearchParams(window.location.search);
+    const clienteId = params.get('idCliente');
+    const animalId = params.get('idAnimal');
 
     const form = document.getElementById('form-animal');
     const mensaje = document.getElementById('mensaje');
 
+    async function cargarDatosAnimal() {
+      const res = await fetch(`/clientes/${clienteId}`);
+      const cliente = await res.json();
+
+      const animal = cliente.animales.find(a => a._id === animalId);
+      if (!animal) {
+        mensaje.textContent = "❌ Animal no encontrado.";
+        return;
+      }
+
+      form.tipo.value = animal.tipo;
+      form.nombre.value = animal.nombre;
+      form.raza.value = animal.raza;
+      form['edad.anios'].value = animal.edad?.anios || '';
+      form['edad.meses'].value = animal.edad?.meses || '';
+      form['edad.dias'].value = animal.edad?.dias || '';
+      form.peso.value = animal.peso || '';
+    }
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const formData = new FormData(form);
+
       const datos = {
-        tipo: formData.get("tipo"),
-        nombre: formData.get("nombre"),
-        raza: formData.get("raza"),
+        tipo: form.tipo.value,
+        nombre: form.nombre.value,
+        raza: form.raza.value,
         edad: {
-          anios: parseInt(formData.get("edad.anios")) || 0,
-          meses: formData.get("edad.meses") ? parseInt(formData.get("edad.meses")) : undefined,
-          dias: formData.get("edad.dias") ? parseInt(formData.get("edad.dias")) : undefined,
+          anios: parseInt(form['edad.anios'].value) || 0,
+          meses: form['edad.meses'].value ? parseInt(form['edad.meses'].value) : undefined,
+          dias: form['edad.dias'].value ? parseInt(form['edad.dias'].value) : undefined
         },
-        peso: formData.get("peso") ? parseFloat(formData.get("peso")) : undefined
+        peso: form.peso.value ? parseFloat(form.peso.value) : undefined
       };
 
-      const res = await fetch(`/clientes/${clienteId}/animales`, {
-        method: 'POST',
+      const res = await fetch(`/clientes/${clienteId}/animales/${animalId}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(datos)
       });
 
-      const result = await res.json();
       if (res.ok) {
-        mensaje.textContent = "✅ Animal agregado con éxito.";
-        form.reset();
+        mensaje.textContent = "✅ Animal actualizado con éxito.";
         setTimeout(() => window.location.href = `cliente.html?id=${clienteId}`, 1500);
       } else {
-        mensaje.textContent = "❌ Error al agregar animal.";
-        console.error(result);
+        mensaje.textContent = "❌ Error al actualizar el animal.";
       }
     });
+
+    cargarDatosAnimal();
   </script>
 
 </body>

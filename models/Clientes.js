@@ -8,29 +8,23 @@ const citaSchema = new mongoose.Schema({
   hora: {
     type: String,
     required: true
+  },
+  correoEnviado: { // 👈 Nuevo campo agregado
+    type: Boolean,
+    default: false
   }
 });
 
 const animalSchema = new mongoose.Schema({
-  tipo: {
-    type: String,
-    required: true
-  },
-  nombre: {
-    type: String,
-    required: true
-  },
-  raza: {
-    type: String,
-    required: true
-  },
+  tipo: String,
+  nombre: String,
+  raza: String,
   edad: {
-    type: Number,
-    required: true
+    anios: { type: Number, required: true },
+    meses: { type: Number },
+    dias: { type: Number }
   },
-  peso: {
-    type: Number
-  },
+  peso: Number,
   citas: [citaSchema]
 });
 
@@ -53,5 +47,7 @@ const clienteSchema = new mongoose.Schema({
   },
   animales: [animalSchema]
 });
+
+
 
 module.exports = mongoose.model('Cliente', clienteSchema);
