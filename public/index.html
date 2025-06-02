@@ -116,6 +116,29 @@
     <button type="submit">Registrar</button>
   </form>
 
+  <div style="margin-top: 20px; width: 100%; max-width: 400px;">
+    <label for="buscarCliente" style="font-weight: bold; color: #333;">🔍 Buscar cliente por nombre o cédula:</label>
+    <input 
+      type="text" 
+      id="buscarCliente" 
+      placeholder="Ej. Juan Pérez o 9999999999"
+      style="
+        width: 100%;
+        padding: 10px 12px;
+        margin-top: 8px;
+        border: 1px solid #ccc;
+        border-radius: 25px;
+        font-size: 15px;
+        outline: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      "
+      onfocus="this.style.borderColor='#4CAF50'; this.style.boxShadow='0 0 5px rgba(76, 175, 80, 0.5)'"
+      onblur="this.style.borderColor='#ccc'; this.style.boxShadow='0 1px 4px rgba(0,0,0,0.1)'"
+    >
+  </div>
+
+
   <p id="mensaje"></p>
 
   <h2>Clientes Registrados</h2>
@@ -154,16 +177,18 @@
       listaClientes.innerHTML = '';
       clientes.forEach(cliente => {
         const card = document.createElement('div');
-        card.className = 'card';
+        card.className = 'card tarjeta-cliente';
         card.innerHTML = `
-          <h3>${cliente.nombre}</h3>
-          <p><strong>Cédula:</strong> ${cliente.cedula}</p>
+          <h3 class="nombre-cliente">${cliente.nombre}</h3>
+          <p><strong>Cédula:</strong> <span class="cedula-cliente">${cliente.cedula}</span></p>
           <p><strong>Correo:</strong> ${cliente.correo}</p>
           <p><strong>Celular:</strong> ${cliente.celular}</p>
           <p><strong>Animales registrados:</strong> ${cliente.animales?.length || 0}</p>
           <button onclick="verAnimales('${cliente._id}')">Ver animales</button>
           <button class="eliminar-btn" onclick="confirmarEliminacion('${cliente._id}')">Eliminar</button>
         `;
+
+
 
         listaClientes.appendChild(card);
       });
@@ -209,6 +234,44 @@
     }
 
     cargarClientes();
+
   </script>
+
+  <script>
+    document.getElementById('buscarCliente').addEventListener('input', function () {
+      const filtro = this.value.toLowerCase();
+      const tarjetas = document.querySelectorAll('.tarjeta-cliente'); // Asegúrate de que tus tarjetas tengan esta clase
+
+      tarjetas.forEach(tarjeta => {
+        const nombre = tarjeta.querySelector('.nombre-cliente')?.textContent.toLowerCase() || '';
+        const cedula = tarjeta.querySelector('.cedula-cliente')?.textContent.toLowerCase() || '';
+
+        if (nombre.includes(filtro) || cedula.includes(filtro)) {
+          tarjeta.style.display = 'block';
+        } else {
+          tarjeta.style.display = 'none';
+        }
+      });
+    });
+  </script>
+
+  <script>
+    document.getElementById('buscarCliente').addEventListener('input', function () {
+      const filtro = this.value.toLowerCase();
+      const tarjetas = document.querySelectorAll('.tarjeta-cliente');
+
+      tarjetas.forEach(tarjeta => {
+        const nombre = tarjeta.querySelector('.nombre-cliente')?.textContent.toLowerCase() || '';
+        const cedula = tarjeta.querySelector('.cedula-cliente')?.textContent.toLowerCase() || '';
+
+        if (nombre.includes(filtro) || cedula.includes(filtro)) {
+          tarjeta.style.display = 'block';
+        } else {
+          tarjeta.style.display = 'none';
+        }
+      });
+    });
+  </script>
+
 </body>
 </html>
