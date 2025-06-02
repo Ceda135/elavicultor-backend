@@ -37,7 +37,8 @@ app.get("/hora-servidor", (req, res) => {
 });
 
 // Tarea programada
-cron.schedule("0 * * * *", async () => {
+cron.schedule("* * * * *", async () => {
+
   console.log("⏰ Buscando citas para enviar recordatorios de mañana...");
 
   const hoy = new Date();
